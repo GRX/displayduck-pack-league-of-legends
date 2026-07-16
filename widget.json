@@ -15,6 +15,12 @@
             "minWidth": 200,
             "minHeight": 100,
             "config": {
+                "autoFocus": {
+                    "label": "Auto Focus",
+                    "subLabel": "Switch to this view when a League of Legends match starts\\n[warning]Requires \"Allow focus grab\" to be enabled![/warning]",
+                    "type": "boolean",
+                    "defaultValue": false
+                },
                 "apiPort": {
                     "label": "Live API port",
                     "subLabel": "The local League Live Client Data API port",
