@@ -13,7 +13,7 @@
 <br />
 <div align="center">
   <a href="https://developer.riotgames.com/docs/lol">
-    <img src="img/lol-icon.png" alt="League of Legends logo" width="80" height="80">
+    <img src="img/ddxlol.png" alt="League of Legends logo" width="80" height="80">
   </a>
 
   <h3 align="center">DisplayDuck League of Legends Stats Pack</h3>
