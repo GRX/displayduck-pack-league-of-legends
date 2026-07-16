@@ -1,0 +1,104 @@
+<div class="widget">
+  {{#if match()}}
+    <div class="match-container">
+      <div class="center">
+        <div class="scoreboard">
+          <div class="score-1">{{match()?.teamStats[0].kills}}</div>
+          <div class="clock-type-wrapper">
+            <div class="clock">{{formatGameTime(match()?.gameTime)}}</div>
+            <div class="type">{{match()?.teamFormat}}</div>
+          </div>
+          <div class="score-2">{{match()?.teamStats[1].kills}}</div>
+        </div>
+      </div>
+      <div class="comparison-stats">
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].kills}}</span><span class="comparison-label">Kills</span><span>{{match()?.teamStats[1].kills}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('kills')}}%;"></div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].deaths}}</span><span class="comparison-label">Deaths</span><span>{{match()?.teamStats[1].deaths}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('deaths')}}%;"></div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].assists}}</span><span class="comparison-label">Assists</span><span>{{match()?.teamStats[1].assists}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('assists')}}%;"></div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].creepScore}}</span><span class="comparison-label">CREEPSCORE</span><span>{{match()?.teamStats[1].creepScore}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('creepScore')}}%;"></div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].towers}}</span><span class="comparison-label">Towers</span><span>{{match()?.teamStats[1].towers}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('towers')}}%;"></div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-values"><span>{{match()?.teamStats[0].inhibitors}}</span><span class="comparison-label">Inhibitors</span><span>{{match()?.teamStats[1].inhibitors}}</span></div>
+            <div class="comparison-bar" style="--left-share: {{comparisonShare('inhibitors')}}%;"></div>
+          </div>
+      </div>
+
+      {{ #each match().teams }}
+        <div class="{{ this.teamNumber === 0 ? 'left' : 'right' }}" style="--team-color: {{ this.teamNumber === 0 ? 'var(--blue)' : 'var(--red)' }};">
+          {{ #each this.players }}
+          <div class="player-container">
+            <div class="avatar {{ this.isDead ? 'dead' : ''}}">
+              <img src="https://wiki.leagueoflegends.com/en-us/images/{{ this.champion.replaceAll(' ', '_') }}_OriginalSquare.png" />
+            </div>
+            <div class="spells">
+              <div class="spell">
+                <img src="{{summonerSpellImageUrl(this, 'summonerSpellOne')}}" />
+              </div>
+              <div class="spell">
+                <img src="{{summonerSpellImageUrl(this, 'summonerSpellTwo')}}" />
+              </div>
+            </div>
+            <div class="player">
+              <div class="champ">{{ this.champion }} </div>
+              <div class="name">{{ this.gameName }}</div>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <div class="name">LVL</div>
+                <div class="value"> {{ this.level }} </div>
+              </div>
+              <div class="stat">
+                <div class="name">K</div>
+                <div class="value"> {{ this.kills }} </div>
+              </div>
+              <div class="stat">
+                <div class="name">D</div>
+                <div class="value"> {{ this.deaths }} </div>
+              </div>
+              <div class="stat">
+                <div class="name">A</div>
+                <div class="value"> {{ this.assists }} </div>
+              </div>
+              <div class="stat">
+                <div class="name">CS</div>
+                <div class="value"> {{ this.creepScore }} </div>
+              </div>
+            </div>
+          </div>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+  {{/if}}
+
+  {{#if !match()}}
+    <div class="waiting">
+      <div class="background">
+        {{#each waitingCircles}}
+          <div class="circle-container">
+            <div class="circle"></div>
+          </div>
+        {{/each}}
+      </div>
+
+      <img src="{{ASSETS}}/img/lolbiglogo.png" alt="League of Legends" />
+      <div class="waiting-title">{{status()}}</div>
+      <div class="waiting-subtitle">Start a League of Legends game to show live stats.</div>
+    </div>
+  {{/if}}
+</div>

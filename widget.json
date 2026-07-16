@@ -1,0 +1,35 @@
+{
+    "icon": "img/lol-icon.png",
+    "name": "League of Legends Stats",
+    "description": "Live League of Legends match stats from the local Live Client Data API.",
+    "assets": ["img"],
+    "version": "1.0.0",
+    "widgets": [
+        {
+            "category": "gaming",
+            "id": "livestats",
+            "icon": "img/lol-icon.png",
+            "name": "LoL: Match stats",
+            "description": "Live League of Legends player and team stats",
+            "platform": "windows",
+            "minWidth": 200,
+            "minHeight": 100,
+            "config": {
+                "apiPort": {
+                    "label": "Live API port",
+                    "subLabel": "The local League Live Client Data API port",
+                    "type": "number",
+                    "defaultValue": 2999
+                },
+                "pollInterval": {
+                    "label": "Poll interval (milliseconds)",
+                    "subLabel": "How often the local API is queried",
+                    "type": "number",
+                    "defaultValue": 1000,
+                    "min": 250,
+                    "max": 5000
+                }
+            }
+        }
+    ]
+}

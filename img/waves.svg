@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" display="block"
+    preserveAspectRatio="xMidYMid" style="background:0 0" viewBox="0 0 1440 300">
+    <defs>
+        <path id="a" fill="none"
+            d="M0 75c240 0 480 150 720 150s480-150 720-150 480 150 720 150 480-150 720-150" />
+        <path id="b" fill="none" stroke="var(--color-primary)"
+            d="M0 75c240 0 480 150 720 150s480-150 720-150 480 150 720 150 480-150 720-150" />
+    </defs>
+</svg>
