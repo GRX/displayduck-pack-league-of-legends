@@ -1775,11 +1775,6 @@ export class DisplayDuckWidget {
       console.log(nextMatch);
       this.status.set('LIVE');
     } catch (error) {
-      console.error('[DisplayDuck LoL] Poll failed', {
-        timestamp: new Date().toISOString(),
-        url: this.getApiUrl(),
-        error,
-      });
       this.match.set(null);
       this.noteMatchUnavailable();
       this.status.set('WAITING FOR GAME');
