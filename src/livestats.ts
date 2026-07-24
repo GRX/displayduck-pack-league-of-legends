@@ -1612,6 +1612,9 @@ type LoLMatch = {
   teamStats: [LoLTeamStats, LoLTeamStats];
 };
 
+let leagueOfLegendsMatchLifecycle: 'unknown' | 'active' | 'ended' = 'unknown';
+let lastLeagueOfLegendsGameTime: number | null = null;
+
 export class DisplayDuckWidget {
   public config: Signal<WidgetPayload>;
   public match = signal<LoLMatch | null>(null);
@@ -1646,6 +1649,10 @@ export class DisplayDuckWidget {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollInFlight = false;
   private focusRequired = false;
+  private consecutiveValidMatches = 0;
+  private consecutiveMissingMatches = 0;
+  private focusCheckInFlight = false;
+  private lastFocusRepairAt = 0;
 
   public constructor(private readonly ctx: WidgetContext) {
     this.config = signal(ctx.payload ?? {});
@@ -1657,12 +1664,19 @@ export class DisplayDuckWidget {
 
   public onUpdate(payload: WidgetPayload): void {
     this.config.set(payload ?? {});
-    this.updateFocusRequirement(this.match() !== null && this.shouldAutoFocus());
+    if (!this.shouldAutoFocus() || leagueOfLegendsMatchLifecycle === 'ended') {
+      this.updateFocusRequirement(false);
+    } else if (this.match() !== null && this.consecutiveValidMatches >= 2) {
+      this.updateFocusRequirement(true);
+      void this.maintainFocus();
+    }
     this.startPolling();
   }
 
   public onDestroy(): void {
     this.updateFocusRequirement(false);
+    this.consecutiveValidMatches = 0;
+    this.consecutiveMissingMatches = 0;
     this.stopPolling();
   }
 
@@ -1750,16 +1764,14 @@ export class DisplayDuckWidget {
 
       if (!nextMatch) {
         this.match.set(null);
-        this.updateFocusRequirement(false);
+        this.noteMatchUnavailable();
         this.status.set('WAITING FOR GAME');
         return;
       }
 
-      const matchStarted = this.match() === null;
       this.match.set(nextMatch);
-      if (matchStarted) {
-        this.updateFocusRequirement(this.shouldAutoFocus());
-      }
+      this.noteMatchAvailable(nextMatch.gameTime);
+      void this.maintainFocus();
       console.log(nextMatch);
       this.status.set('LIVE');
     } catch (error) {
@@ -1769,6 +1781,7 @@ export class DisplayDuckWidget {
         error,
       });
       this.match.set(null);
+      this.noteMatchUnavailable();
       this.status.set('WAITING FOR GAME');
     } finally {
       this.pollInFlight = false;
@@ -2013,6 +2026,68 @@ export class DisplayDuckWidget {
       }
       console.error('Failed to update the League of Legends widget focus requirement.', error);
     });
+  }
+
+  private noteMatchAvailable(gameTime: number): void {
+    const isNewMatch = leagueOfLegendsMatchLifecycle === 'ended'
+      && (
+        gameTime <= 10
+        || (
+          lastLeagueOfLegendsGameTime !== null
+          && gameTime < lastLeagueOfLegendsGameTime - 10
+        )
+      );
+
+    if (leagueOfLegendsMatchLifecycle === 'unknown' || isNewMatch) {
+      leagueOfLegendsMatchLifecycle = 'active';
+      this.consecutiveValidMatches = 0;
+      this.consecutiveMissingMatches = 0;
+    }
+
+    lastLeagueOfLegendsGameTime = gameTime;
+    this.consecutiveMissingMatches = 0;
+    this.consecutiveValidMatches += 1;
+    if (
+      this.consecutiveValidMatches >= 2
+      && leagueOfLegendsMatchLifecycle === 'active'
+      && this.shouldAutoFocus()
+    ) {
+      this.updateFocusRequirement(true);
+    }
+  }
+
+  private noteMatchUnavailable(): void {
+    this.consecutiveValidMatches = 0;
+    this.consecutiveMissingMatches += 1;
+    if (this.consecutiveMissingMatches >= 3) {
+      leagueOfLegendsMatchLifecycle = 'ended';
+      this.updateFocusRequirement(false);
+    }
+  }
+
+  private async maintainFocus(): Promise<void> {
+    if (
+      !this.focusRequired
+      || !this.shouldAutoFocus()
+      || this.match() === null
+      || leagueOfLegendsMatchLifecycle === 'ended'
+      || this.focusCheckInFlight
+      || Date.now() - this.lastFocusRepairAt < 1500
+    ) {
+      return;
+    }
+
+    this.focusCheckInFlight = true;
+    try {
+      if (!(await this.ctx.isWidgetViewFocused())) {
+        this.lastFocusRepairAt = Date.now();
+        await this.ctx.focusWidgetView();
+      }
+    } catch (error: unknown) {
+      console.error('Failed to verify the League of Legends widget focus.', error);
+    } finally {
+      this.focusCheckInFlight = false;
+    }
   }
 
   private getApiPort(): number {
