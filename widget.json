@@ -3,7 +3,7 @@
     "name": "League of Legends Stats",
     "description": "Live League of Legends match stats from the local Live Client Data API.",
     "assets": ["img"],
-    "version": "1.0.2",
+    "version": "1.0.5",
     "widgets": [
         {
             "category": "gaming",

@@ -1748,12 +1748,19 @@ export class DisplayDuckWidget {
       return;
     }
 
+    if (!this.hasLocalhostAccessPermission()) {
+      this.match.set(null);
+      this.status.set('ENABLE LOCALHOST ACCESS IN WIDGET SETTINGS');
+      this.ctx.setLoading(false);
+      return;
+    }
+
     this.pollInFlight = true;
     try {
       const apiUrl = this.getApiUrl();
       const parsed = this.testMode
         ? fakeMatch.data
-        : JSON.parse(await httpFetch(apiUrl)) as unknown;
+        : JSON.parse(await httpFetch(apiUrl, this.hasLocalhostAccessPermission())) as unknown;
       console.log('[DisplayDuck LoL] Incoming data', {
         timestamp: new Date().toISOString(),
         url: apiUrl,
@@ -1791,6 +1798,13 @@ export class DisplayDuckWidget {
 
     const gameData = this.isRecord(value.gameData) ? value.gameData : null;
     if (!gameData) {
+      return null;
+    }
+
+    // The Live Client Data API can also be available while Teamfight Tactics
+    // is running. TFT is a separate game and does not provide the Summoner's
+    // Rift-style player/team data this widget is designed to display.
+    if (this.isTeamfightTactics(gameData)) {
       return null;
     }
 
@@ -2004,6 +2018,21 @@ export class DisplayDuckWidget {
     return `https://127.0.0.1:${this.getApiPort()}/liveclientdata/allgamedata`;
   }
 
+  private isTeamfightTactics(gameData: Record<string, unknown>): boolean {
+    const gameMode = this.getString(gameData.gameMode).toLowerCase();
+    const mapName = this.getString(gameData.mapName).toLowerCase();
+    const gameModeText = gameMode.replace(/[\s_-]+/g, '');
+    const mapText = mapName.replace(/[\s_-]+/g, '');
+
+    return (
+      gameModeText === 'tft'
+      || gameModeText.includes('teamfighttactics')
+      || mapText === 'tft'
+      || mapText.includes('teamfighttactics')
+      || mapText.includes('convergence')
+    );
+  }
+
   private shouldAutoFocus(): boolean {
     return this.getConfigValue('autoFocus') === true
       && this.getConfigValue('allowFocusGrab') === true;
@@ -2090,6 +2119,10 @@ export class DisplayDuckWidget {
     return Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort <= 65535
       ? configuredPort
       : 2999;
+  }
+
+  private hasLocalhostAccessPermission(): boolean {
+    return this.getConfigValue('allowEventAccess') === true;
   }
 
   private getPollInterval(): number {
