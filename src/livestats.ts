@@ -1571,7 +1571,6 @@ type LoLWidgetConfig = WidgetConfigValues & {
   apiPort?: number;
   pollInterval?: number;
   autoFocus?: boolean;
-  allowFocusGrab?: boolean;
 };
 
 type LoLTeam = 'ORDER' | 'CHAOS';
@@ -2035,7 +2034,7 @@ export class DisplayDuckWidget extends Widget<LoLWidgetConfig> {
 
   private shouldAutoFocus(): boolean {
     return this.getConfigValue('autoFocus') === true
-      && this.getConfigValue('allowFocusGrab') === true;
+      && this.permissions.has('focus');
   }
 
   private updateFocusRequirement(required: boolean): void {

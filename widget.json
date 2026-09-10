@@ -14,7 +14,7 @@
             "platform": "windows",
             "minWidth": 200,
             "minHeight": 100,
-            "permissions": ["network"],
+            "permissions": ["network", "focus"],
             "config": {
                 "autoFocus": {
                     "label": "Auto Focus",
