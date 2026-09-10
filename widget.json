@@ -18,7 +18,7 @@
             "config": {
                 "autoFocus": {
                     "label": "Auto Focus",
-                    "subLabel": "Switch to this view when a League of Legends match starts\\n[warning]Requires \"Allow focus grab\" to be enabled![/warning]",
+                    "subLabel": "Switch to this view when a League of Legends match starts\\n[warning]Requires \"Allow auto-focus\" to be enabled![/warning]",
                     "type": "boolean",
                     "defaultValue": false
                 },
