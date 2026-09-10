@@ -1561,12 +1561,18 @@ const fakeMatch = {
 // }
 
 import {
-  httpFetch,
   signal,
-  type Signal,
-  type WidgetContext,
+  Widget,
+  type WidgetConfigValues,
   type WidgetPayload,
 } from '@displayduck/base';
+
+type LoLWidgetConfig = WidgetConfigValues & {
+  apiPort?: number;
+  pollInterval?: number;
+  autoFocus?: boolean;
+  allowFocusGrab?: boolean;
+};
 
 type LoLTeam = 'ORDER' | 'CHAOS';
 type SummonerSpellSlot = 'summonerSpellOne' | 'summonerSpellTwo';
@@ -1615,8 +1621,7 @@ type LoLMatch = {
 let leagueOfLegendsMatchLifecycle: 'unknown' | 'active' | 'ended' = 'unknown';
 let lastLeagueOfLegendsGameTime: number | null = null;
 
-export class DisplayDuckWidget {
-  public config: Signal<WidgetPayload>;
+export class DisplayDuckWidget extends Widget<LoLWidgetConfig> {
   public match = signal<LoLMatch | null>(null);
   public status = signal('WAITING FOR GAME');
   public readonly waitingCircles = Array.from({ length: 100 }, (_, index) => index);
@@ -1654,16 +1659,11 @@ export class DisplayDuckWidget {
   private focusCheckInFlight = false;
   private lastFocusRepairAt = 0;
 
-  public constructor(private readonly ctx: WidgetContext) {
-    this.config = signal(ctx.payload ?? {});
-  }
-
   public onInit(): void {
     this.startPolling();
   }
 
-  public onUpdate(payload: WidgetPayload): void {
-    this.config.set(payload ?? {});
+  public onUpdate(_payload: WidgetPayload): void {
     if (!this.shouldAutoFocus() || leagueOfLegendsMatchLifecycle === 'ended') {
       this.updateFocusRequirement(false);
     } else if (this.match() !== null && this.consecutiveValidMatches >= 2) {
@@ -1750,8 +1750,8 @@ export class DisplayDuckWidget {
 
     if (!this.hasLocalhostAccessPermission()) {
       this.match.set(null);
-      this.status.set('ENABLE LOCALHOST ACCESS IN WIDGET SETTINGS');
-      this.ctx.setLoading(false);
+      this.status.set('ENABLE NETWORK ACCESS IN WIDGET SETTINGS');
+      this.app.setLoading(false);
       return;
     }
 
@@ -1760,7 +1760,7 @@ export class DisplayDuckWidget {
       const apiUrl = this.getApiUrl();
       const parsed = this.testMode
         ? fakeMatch.data
-        : JSON.parse(await httpFetch(apiUrl, this.hasLocalhostAccessPermission())) as unknown;
+        : JSON.parse(await this.network.fetch(apiUrl)) as unknown;
       console.log('[DisplayDuck LoL] Incoming data', {
         timestamp: new Date().toISOString(),
         url: apiUrl,
@@ -1787,7 +1787,7 @@ export class DisplayDuckWidget {
       this.status.set('WAITING FOR GAME');
     } finally {
       this.pollInFlight = false;
-      this.ctx.setLoading(false);
+      this.app.setLoading(false);
     }
   }
 
@@ -2044,7 +2044,7 @@ export class DisplayDuckWidget {
     }
 
     this.focusRequired = required;
-    void this.ctx.setRequireFocus(required).catch((error: unknown) => {
+    void this.app.setRequireFocus(required).catch((error: unknown) => {
       if (required) {
         this.focusRequired = false;
       }
@@ -2103,9 +2103,9 @@ export class DisplayDuckWidget {
 
     this.focusCheckInFlight = true;
     try {
-      if (!(await this.ctx.isWidgetViewFocused())) {
+      if (!(await this.app.isViewFocused())) {
         this.lastFocusRepairAt = Date.now();
-        await this.ctx.focusWidgetView();
+        await this.app.focusView();
       }
     } catch (error: unknown) {
       console.error('Failed to verify the League of Legends widget focus.', error);
@@ -2122,7 +2122,7 @@ export class DisplayDuckWidget {
   }
 
   private hasLocalhostAccessPermission(): boolean {
-    return this.getConfigValue('allowEventAccess') === true;
+    return this.permissions.has('network');
   }
 
   private getPollInterval(): number {
@@ -2133,12 +2133,7 @@ export class DisplayDuckWidget {
   }
 
   private getConfigValue(key: string): unknown {
-    const payloadConfig = this.config().config;
-    if (!this.isRecord(payloadConfig)) {
-      return undefined;
-    }
-
-    return payloadConfig[key];
+    return (this.config as Record<string, unknown>)[key];
   }
 
   private getString(value: unknown): string {

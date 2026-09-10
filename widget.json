@@ -3,7 +3,7 @@
     "name": "League of Legends Stats",
     "description": "Live League of Legends match stats from the local Live Client Data API.",
     "assets": ["img"],
-    "version": "1.0.5",
+    "version": "1.1.0",
     "widgets": [
         {
             "category": "gaming",
@@ -14,6 +14,7 @@
             "platform": "windows",
             "minWidth": 200,
             "minHeight": 100,
+            "permissions": ["network"],
             "config": {
                 "autoFocus": {
                     "label": "Auto Focus",
